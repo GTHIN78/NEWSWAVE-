@@ -1,0 +1,6 @@
+{
+  "name": "NEWSWAVE — सच की लहर | Hindi Digital News",
+  "description": "प्रीमियम हिंदी डिजिटल समाचार पोर्टल — ताज़ा और निष्पक्ष राष्ट्रीय, अंतर्राष्ट्रीय, व्यापार, तकनीक एवं संपादकीय विश्लेषण।",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
