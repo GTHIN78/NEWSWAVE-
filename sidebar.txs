@@ -1,0 +1,316 @@
+import React, { useState } from 'react';
+import { TrendingUp, Mail, CheckCircle2, ShieldCheck, ArrowRight, Bookmark, X, Trash2 } from 'lucide-react';
+import { Article, Language } from '../types/news';
+import { EDITORIAL_COLUMNS, MARKET_DATA } from '../data/newsData';
+import { AdPlaceholder } from './AdPlaceholder';
+
+interface SidebarProps {
+  language?: Language;
+  trendingArticles: Article[];
+  bookmarkedArticles: Article[];
+  onSelectArticle: (article: Article) => void;
+  onOpenPolicy: (policyType: string) => void;
+  onToggleBookmark: (articleId: string) => void;
+  onClearBookmarks?: () => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({
+  language = 'hi',
+  trendingArticles,
+  bookmarkedArticles,
+  onSelectArticle,
+  onOpenPolicy,
+  onToggleBookmark,
+  onClearBookmarks,
+}) => {
+  const [email, setEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+  const [emailError, setEmailError] = useState('');
+
+  const isHindi = language === 'hi';
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !email.includes('@') || !email.includes('.')) {
+      setEmailError(isHindi ? 'कृपया एक वैध ईमेल पता दर्ज करें।' : 'Please enter a valid email address.');
+      return;
+    }
+    setEmailError('');
+    setSubscribed(true);
+  };
+
+  return (
+    <aside className="space-y-6 font-devanagari">
+      {/* 1. Sidebar Rectangle Ad Placeholder (Prompt Item 9) */}
+      <AdPlaceholder slotType="sidebar-rect" />
+
+      {/* 2. Saved Articles Section (सहेजे गए समाचार - LocalStorage Persisted) */}
+      <div id="saved-articles-sidebar" className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-xs p-4 scroll-mt-20 transition-colors">
+        <div className="flex items-center justify-between border-b-2 border-[#B71925] pb-2 mb-3">
+          <h2 className="text-base font-bold font-devanagari text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
+            <Bookmark className="w-4 h-4 text-[#B71925] fill-current" />
+            <span>{isHindi ? 'सहेजे गए समाचार' : 'Saved Articles'}</span>
+          </h2>
+          <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 font-devanagari">
+            <span className="font-mono tabular-nums">{bookmarkedArticles.length}</span> {isHindi ? 'सहेजे गए' : 'saved'}
+          </span>
+        </div>
+
+        {bookmarkedArticles.length === 0 ? (
+          <div className="py-5 text-center text-neutral-500 dark:text-neutral-400 font-devanagari bg-neutral-50 dark:bg-neutral-800/50 rounded p-3 border border-dashed border-gray-200 dark:border-neutral-700">
+            <Bookmark className="w-7 h-7 text-neutral-300 dark:text-neutral-600 mx-auto mb-2" />
+            <p className="text-xs font-bold text-neutral-700 dark:text-neutral-300">
+              {isHindi ? 'कोई सहेजा गया समाचार नहीं है' : 'No saved articles yet'}
+            </p>
+            <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1 leading-relaxed">
+              {isHindi 
+                ? 'किसी भी लेख पर बुकमार्क आइकन दबाकर उसे बाद में पढ़ने के लिए सहेजें। यह आपके ब्राउज़र में सुरक्षित रहता है।' 
+                : 'Click the bookmark icon on any story to save it for reading later. It stays saved in your browser.'}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="divide-y divide-gray-100 dark:divide-neutral-800 max-h-72 overflow-y-auto pr-1">
+              {bookmarkedArticles.map((article) => {
+                const title = isHindi ? article.title : (article.titleEn || article.title);
+                const cat = isHindi ? article.categoryHindi : (article.categoryEnglish || article.categoryHindi);
+                return (
+                  <div
+                    key={article.id}
+                    className="py-2.5 flex items-start gap-2.5 group"
+                  >
+                    <div
+                      onClick={() => onSelectArticle(article)}
+                      className="w-16 h-12 shrink-0 overflow-hidden rounded-xs bg-neutral-100 dark:bg-neutral-800 cursor-pointer"
+                    >
+                      <img
+                        src={article.imageUrl}
+                        alt={title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        loading="lazy"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 text-[10px] text-neutral-400 font-devanagari mb-0.5">
+                        <span className="font-semibold text-[#B71925]">{cat}</span>
+                        <span>·</span>
+                        <span>{article.readTimeMinutes} {isHindi ? 'मिनट' : 'min'}</span>
+                      </div>
+                      <h3
+                        onClick={() => onSelectArticle(article)}
+                        className="text-xs font-bold text-neutral-900 dark:text-neutral-100 font-martel leading-snug line-clamp-2 hover:text-[#B71925] transition-colors cursor-pointer"
+                      >
+                        {title}
+                      </h3>
+                    </div>
+                    <button
+                      onClick={() => onToggleBookmark(article.id)}
+                      className="text-neutral-400 hover:text-red-700 p-1 rounded hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors shrink-0 cursor-pointer"
+                      title={isHindi ? "सहेजे गए से हटाएं" : "Remove"}
+                      aria-label="Remove"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
+            {onClearBookmarks && bookmarkedArticles.length > 1 && (
+              <div className="pt-2 border-t border-gray-100 dark:border-neutral-800 flex justify-between items-center text-[11px] font-devanagari">
+                <span className="text-neutral-400">{isHindi ? 'लोकल स्टोरेज में सहेजा गया' : 'Stored in localStorage'}</span>
+                <button
+                  onClick={onClearBookmarks}
+                  className="text-neutral-500 hover:text-[#B71925] flex items-center gap-1 transition-colors font-medium cursor-pointer"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  <span>{isHindi ? 'सभी हटाएं' : 'Clear All'}</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* 3. Most Read / Popular Stories (Prompt Item 8) */}
+      <div className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-xs p-4 transition-colors">
+        <div className="flex items-center justify-between border-b-2 border-neutral-900 dark:border-neutral-700 pb-2 mb-4">
+          <h2 className="text-base font-bold font-devanagari text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
+            <span className="w-2.5 h-2.5 bg-[#B71925]" />
+            <span>{isHindi ? 'सबसे ज़्यादा पढ़ी गईं' : 'Trending & Most Read'}</span>
+          </h2>
+          <span className="text-[11px] text-neutral-500 dark:text-neutral-400 font-devanagari">
+            {isHindi ? 'पिछले 24 घंटे' : 'Last 24 Hours'}
+          </span>
+        </div>
+
+        <div className="divide-y divide-gray-100 dark:divide-neutral-800">
+          {trendingArticles.slice(0, 5).map((article, idx) => {
+            const title = isHindi ? article.title : (article.titleEn || article.title);
+            const cat = isHindi ? article.categoryHindi : (article.categoryEnglish || article.categoryHindi);
+            return (
+              <div
+                key={article.id}
+                onClick={() => onSelectArticle(article)}
+                className="py-3 flex items-start gap-3 group cursor-pointer"
+              >
+                <span className="text-2xl font-black font-martel text-[#B71925]/70 group-hover:text-[#B71925] shrink-0 w-6 leading-none pt-0.5">
+                  {idx + 1}
+                </span>
+                <div className="flex-1">
+                  <div className="flex items-center gap-1.5 text-[11px] font-devanagari text-neutral-400 mb-0.5">
+                    <span className="font-semibold text-neutral-600 dark:text-neutral-400">{cat}</span>
+                    <span>·</span>
+                    <span>{article.readTimeMinutes} {isHindi ? 'मिनट पढ़ें' : 'min read'}</span>
+                  </div>
+                  <h3 className="text-xs sm:text-sm font-bold text-neutral-900 dark:text-neutral-100 font-martel leading-snug group-hover:text-[#B71925] transition-colors line-clamp-2">
+                    {title}
+                  </h3>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 4. Editorial & Opinion Columnists */}
+      <div className="bg-neutral-50 dark:bg-neutral-900/60 border border-gray-200 dark:border-neutral-800 rounded-xs p-4 transition-colors">
+        <div className="flex items-center justify-between border-b-2 border-[#B71925] pb-2 mb-3">
+          <h2 className="text-base font-bold font-devanagari text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#B71925]" />
+            <span>{isHindi ? 'संपादकीय एवं विचार' : 'Editorial & Opinions'}</span>
+          </h2>
+          <span className="text-[11px] font-semibold text-[#B71925] font-devanagari">
+            {isHindi ? 'मंथन' : 'Analysis'}
+          </span>
+        </div>
+
+        <div className="space-y-3.5">
+          {EDITORIAL_COLUMNS.map((col) => (
+            <div key={col.id} className="border-b border-gray-200 dark:border-neutral-800 pb-3 last:border-b-0 last:pb-0">
+              <p className="text-xs font-bold text-neutral-800 dark:text-neutral-200 font-devanagari">
+                {isHindi ? col.author : (col.authorEn || col.author)}
+              </p>
+              <p className="text-[11px] text-neutral-500 dark:text-neutral-400 font-devanagari mb-1">
+                {isHindi ? col.role : (col.roleEn || col.role)}
+              </p>
+              <h4 className="text-xs font-semibold text-neutral-900 dark:text-neutral-100 font-martel leading-snug hover:text-[#B71925] cursor-pointer transition-colors">
+                "{isHindi ? col.title : (col.titleEn || col.title)}"
+              </h4>
+              <span className="text-[10px] text-neutral-400 font-devanagari mt-1 block">
+                {isHindi ? col.readTime : (col.readTimeEn || col.readTime)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 5. Financial Markets Glance */}
+      <div className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-xs p-4 transition-colors">
+        <div className="flex items-center justify-between border-b border-gray-200 dark:border-neutral-800 pb-2 mb-3">
+          <h2 className="text-sm font-bold font-devanagari text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
+            <TrendingUp className="w-4 h-4 text-[#B71925]" />
+            <span>{isHindi ? 'कारोबार एवं बाज़ार' : 'Markets & Indices'}</span>
+          </h2>
+          <span className="text-[10px] font-mono text-neutral-400">LIVE NSE/BSE</span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          {MARKET_DATA.map((item) => (
+            <div key={item.name} className="p-2 bg-neutral-50 dark:bg-neutral-800 rounded border border-neutral-100 dark:border-neutral-700">
+              <p className="text-[11px] text-neutral-600 dark:text-neutral-300 font-devanagari font-medium truncate">
+                {isHindi ? item.name : (item.nameEn || item.name)}
+              </p>
+              <p className="font-bold text-neutral-900 dark:text-neutral-100 font-mono text-xs mt-0.5">
+                {item.value}
+              </p>
+              <p
+                className={`text-[10px] font-semibold font-mono ${
+                  item.isPositive ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'
+                }`}
+              >
+                {item.change}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 6. Fact Check Box (तथ्य-जांच डेस्क) */}
+      <div className="bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-xs p-4 transition-colors">
+        <div className="flex items-center gap-2 mb-2">
+          <ShieldCheck className="w-5 h-5 text-amber-700 dark:text-amber-400" />
+          <h3 className="text-sm font-bold text-amber-900 dark:text-amber-300 font-devanagari">
+            {isHindi ? 'न्यूज़वेव तथ्य-जांच डेस्क' : 'Newswave Fact-Checking Desk'}
+          </h3>
+        </div>
+        <p className="text-xs text-amber-950 dark:text-amber-200 font-devanagari leading-relaxed mb-3">
+          {isHindi 
+            ? 'सोशल मीडिया पर वायरल हो रहे भ्रामक दावों और डीपफेक वीडियो की निष्पक्ष जांच।' 
+            : 'Rigorous investigation into viral claims, manipulated media, and disinformation.'}
+        </p>
+        <button
+          onClick={() => onOpenPolicy('factcheck')}
+          className="text-xs font-bold text-[#B71925] dark:text-red-400 hover:underline flex items-center gap-1 font-devanagari cursor-pointer"
+        >
+          <span>{isHindi ? 'फैक्ट-चेक गाइड व प्रक्रिया देखें' : 'View Verification Protocol'}</span>
+          <ArrowRight className="w-3 h-3" />
+        </button>
+      </div>
+
+      {/* 7. Newsletter Subscription Widget */}
+      <div className="bg-neutral-900 dark:bg-neutral-950 text-white rounded-xs p-5 border border-neutral-800">
+        <div className="flex items-center gap-2 mb-2">
+          <Mail className="w-5 h-5 text-red-500" />
+          <h3 className="text-base font-bold font-devanagari">
+            {isHindi ? 'सच की लहर — सुबह का बुलेटिन' : 'Newswave Morning Dispatch'}
+          </h3>
+        </div>
+        <p className="text-xs text-neutral-300 font-devanagari leading-relaxed mb-3">
+          {isHindi 
+            ? 'दिनभर की 10 सबसे बड़ी और विश्वसनीय खबरें हर सुबह 7:00 बजे सीधे आपके इनबॉक्स में।' 
+            : 'Curated top 10 national and global reports delivered directly to your inbox every morning at 7:00 AM.'}
+        </p>
+
+        {subscribed ? (
+          <div className="bg-emerald-950 border border-emerald-600 text-emerald-200 p-3 rounded text-xs font-devanagari flex items-start gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold">{isHindi ? 'सफलतापूर्वक सदस्यता ले ली गई!' : 'Subscribed successfully!'}</p>
+              <p className="text-[11px] text-emerald-300 mt-0.5">
+                {isHindi ? 'पहला समाचार बुलेटिन कल सुबह प्रेषित किया जाएगा।' : 'Your first briefing will arrive tomorrow morning.'}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubscribe} className="space-y-2">
+            <div>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={isHindi ? "अपना ईमेल दर्ज करें..." : "Enter your email..."}
+                className="w-full px-3 py-2 text-xs bg-neutral-800 border border-neutral-700 rounded text-white placeholder-neutral-400 focus:outline-none focus:border-red-500 font-devanagari"
+                aria-label="ईमेल पता"
+              />
+              {emailError && (
+                <p className="text-[11px] text-red-400 font-devanagari mt-1">
+                  {emailError}
+                </p>
+              )}
+            </div>
+            <button
+              type="submit"
+              className="w-full py-2 bg-[#B71925] hover:bg-red-700 text-white text-xs font-bold rounded transition-colors font-devanagari shadow-xs cursor-pointer"
+            >
+              {isHindi ? 'मुफ्त सदस्यता लें' : 'Subscribe Free'}
+            </button>
+            <p className="text-[10px] text-neutral-400 text-center font-devanagari">
+              {isHindi ? 'कोई स्पैम नहीं। कभी भी सदस्यता रद्द कर सकते हैं।' : 'Zero spam. Unsubscribe anytime.'}
+            </p>
+          </form>
+        )}
+      </div>
+    </aside>
+  );
+};
