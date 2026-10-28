@@ -1,0 +1,160 @@
+import React from 'react';
+import { Clock, Eye, MessageSquare, ArrowUpRight, Bookmark, Video } from 'lucide-react';
+import { Article, Language } from '../types/news';
+
+interface LeadStoryProps {
+  article: Article;
+  language?: Language;
+  onSelectArticle: (article: Article) => void;
+  onSelectCategory: (category: any) => void;
+  isBookmarked?: boolean;
+  onToggleBookmark?: (articleId: string) => void;
+}
+
+export const LeadStory: React.FC<LeadStoryProps> = ({
+  article,
+  language = 'hi',
+  onSelectArticle,
+  onSelectCategory,
+  isBookmarked = false,
+  onToggleBookmark,
+}) => {
+  const isHindi = language === 'hi';
+  const title = isHindi ? article.title : (article.titleEn || article.title);
+  const summary = isHindi ? article.summary : (article.summaryEn || article.summary);
+  const categoryLabel = isHindi ? article.categoryHindi : (article.categoryEnglish || article.categoryHindi);
+  const authorName = isHindi ? article.author.name : (article.author.nameEn || article.author.name);
+  const authorRole = isHindi ? article.author.role : (article.author.roleEn || article.author.role);
+
+  return (
+    <article className="border-b border-gray-200 dark:border-neutral-800 pb-6 mb-6 transition-colors">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        {/* Large Media Focal Point */}
+        <div className="lg:col-span-7 overflow-hidden rounded-xs bg-neutral-100 dark:bg-neutral-800 group relative">
+          <div 
+            className="cursor-pointer overflow-hidden aspect-[16/9]"
+            onClick={() => onSelectArticle(article)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && onSelectArticle(article)}
+            aria-label={title}
+          >
+            <img
+              src={article.imageUrl}
+              alt={article.imageCaption || title}
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+              loading="eager"
+            />
+          </div>
+
+          {article.videoUrl && (
+            <div className="absolute bottom-3 left-3 bg-[#B71925] text-white px-2 py-1 rounded text-xs font-bold flex items-center gap-1 shadow-md">
+              <Video className="w-3.5 h-3.5" />
+              <span>{isHindi ? 'वीडियो रिपोर्ट' : 'Video Report'}</span>
+            </div>
+          )}
+
+          {onToggleBookmark && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleBookmark(article.id);
+              }}
+              className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-all shadow-md cursor-pointer ${
+                isBookmarked
+                  ? 'bg-[#B71925] text-white'
+                  : 'bg-white/90 dark:bg-neutral-900/90 hover:bg-white text-neutral-700 dark:text-neutral-200 hover:text-[#B71925]'
+              }`}
+              title={isBookmarked ? (isHindi ? 'सहेजे गए से हटाएं' : 'Remove Bookmark') : (isHindi ? 'सहेजें' : 'Bookmark Story')}
+              aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark story'}
+            >
+              <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-current' : ''}`} />
+            </button>
+          )}
+
+          {article.imageCaption && (
+            <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1.5 font-devanagari italic line-clamp-1">
+              {isHindi ? 'फोटो:' : 'Photo:'} {article.imageCaption}
+            </p>
+          )}
+        </div>
+
+        {/* Lead Editorial Copy */}
+        <div className="lg:col-span-5 flex flex-col justify-between">
+          <div>
+            {/* Category kicker & unboxed metadata */}
+            <div className="flex items-center gap-2 text-xs font-devanagari mb-2.5">
+              <button
+                onClick={() => onSelectCategory(article.category)}
+                className="text-[#B71925] font-bold uppercase tracking-wider hover:underline cursor-pointer"
+              >
+                {categoryLabel}
+              </button>
+              <span className="text-gray-300 dark:text-neutral-700" aria-hidden="true">·</span>
+              <span className="text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
+                <Clock className="w-3 h-3 text-neutral-400" />
+                {article.publishedAt}
+              </span>
+              <span className="text-gray-300 dark:text-neutral-700" aria-hidden="true">·</span>
+              <span className="text-neutral-500 dark:text-neutral-400">
+                {article.readTimeMinutes} {isHindi ? 'मिनट पढ़ें' : 'min read'}
+              </span>
+            </div>
+
+            {/* Main Headline */}
+            <h1
+              onClick={() => onSelectArticle(article)}
+              className="text-2xl sm:text-3xl lg:text-3xl font-extrabold text-neutral-900 dark:text-neutral-50 font-martel leading-tight hover:text-[#B71925] transition-colors cursor-pointer group"
+              style={{ textWrap: 'balance' }}
+            >
+              {title}
+            </h1>
+
+            {/* Editorial Deck / Summary */}
+            <p className="mt-3 text-sm sm:text-base text-neutral-700 dark:text-neutral-300 font-devanagari leading-relaxed">
+              {summary}
+            </p>
+          </div>
+
+          {/* Author Byline & Stats */}
+          <div className="pt-4 mt-4 border-t border-gray-100 dark:border-neutral-800 flex items-center justify-between text-xs text-neutral-600 dark:text-neutral-400 font-devanagari">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center font-bold text-xs text-neutral-700 dark:text-neutral-200">
+                {authorName.charAt(0)}
+              </div>
+              <div>
+                <p className="font-semibold text-neutral-900 dark:text-neutral-200 leading-none">{authorName}</p>
+                <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">{authorRole}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5">
+              {onToggleBookmark && (
+                <button
+                  onClick={() => onToggleBookmark(article.id)}
+                  className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-semibold font-devanagari transition-colors cursor-pointer ${
+                    isBookmarked
+                      ? 'bg-red-50 dark:bg-red-950/40 text-[#B71925] dark:text-red-300 border border-red-200 dark:border-red-900'
+                      : 'text-neutral-600 dark:text-neutral-300 hover:text-[#B71925] hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                  }`}
+                  title={isBookmarked ? (isHindi ? 'सहेजे गए से हटाएं' : 'Remove Bookmark') : (isHindi ? 'सहेजें' : 'Bookmark')}
+                >
+                  <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-current text-[#B71925]' : ''}`} />
+                  <span>{isBookmarked ? (isHindi ? 'सहेजा गया' : 'Saved') : (isHindi ? 'सहेजें' : 'Save')}</span>
+                </button>
+              )}
+              <button
+                onClick={() => onSelectArticle(article)}
+                className="inline-flex items-center gap-1 font-semibold text-[#B71925] hover:text-red-800 dark:hover:text-red-400 transition-colors cursor-pointer"
+              >
+                <span>{isHindi ? 'पूरा पढ़ें' : 'Read Full'}</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+};
