@@ -1,0 +1,157 @@
+import React, { useState } from 'react';
+import { Menu, X, Flame, Video } from 'lucide-react';
+import { CATEGORIES } from '../data/newsData';
+import { NewsCategory, Language } from '../types/news';
+
+interface NavigationProps {
+  language: Language;
+  activeCategory: NewsCategory;
+  onSelectCategory: (category: NewsCategory) => void;
+  onSelectTag: (tag: string) => void;
+  onOpenVideoNews: () => void;
+  isCustomView?: boolean;
+}
+
+export const Navigation: React.FC<NavigationProps> = ({
+  language,
+  activeCategory,
+  onSelectCategory,
+  onSelectTag,
+  onOpenVideoNews,
+  isCustomView = false,
+}) => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isHindi = language === 'hi';
+
+  const trendingTagsHindi = [
+    'बुलेट ट्रेन',
+    'इसरो गगनयान',
+    'सेंसेक्स 85K',
+    'सेमीकंडक्टर',
+    'शिक्षा नीति',
+    'सौर ऊर्जा',
+  ];
+
+  const trendingTagsEnglish = [
+    'BulletTrain',
+    'ISROMission',
+    'Sensex85k',
+    'Semiconductors',
+    'NewEducationPolicy',
+    'SolarEnergy',
+  ];
+
+  const trendingTags = isHindi ? trendingTagsHindi : trendingTagsEnglish;
+
+  const handleCategoryClick = (catId: string) => {
+    if (catId === 'video') {
+      onOpenVideoNews();
+      setMobileMenuOpen(false);
+      return;
+    }
+    onSelectCategory(catId as NewsCategory);
+    setMobileMenuOpen(false);
+  };
+
+  const activeCategoryObj = CATEGORIES.find((c) => c.id === activeCategory);
+  const activeLabel = isHindi ? activeCategoryObj?.nameHindi : activeCategoryObj?.nameEnglish;
+
+  return (
+    <nav className="sticky top-0 z-30 bg-white dark:bg-neutral-900 border-b-2 border-[#B71925] shadow-xs transition-colors">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-11">
+          {/* Mobile Menu Toggle Button */}
+          <div className="flex items-center md:hidden">
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="inline-flex items-center justify-center p-1.5 rounded-md text-gray-700 dark:text-neutral-200 hover:text-[#B71925] hover:bg-gray-100 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#B71925] cursor-pointer"
+              aria-expanded={mobileMenuOpen}
+              aria-label={isHindi ? "नेविगेशन मेनू खोलें" : "Open Navigation"}
+            >
+              {mobileMenuOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <Menu className="w-5 h-5" />
+              )}
+            </button>
+            <span className="ml-2 font-bold text-sm text-[#B71925] font-devanagari">
+              {activeLabel || (isHindi ? 'होम' : 'Home')}
+            </span>
+          </div>
+
+          {/* Desktop Navigation Links */}
+          <div className="hidden md:flex items-center space-x-1 lg:space-x-3 overflow-x-auto hide-scrollbar py-1">
+            {CATEGORIES.map((cat) => {
+              const isActive = !isCustomView && activeCategory === cat.id;
+              const label = isHindi ? cat.nameHindi : cat.nameEnglish;
+              const isVideoCat = cat.id === 'video';
+
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => handleCategoryClick(cat.id)}
+                  className={`px-2 py-1 text-sm font-semibold whitespace-nowrap transition-colors relative font-devanagari focus:outline-none cursor-pointer flex items-center gap-1 ${
+                    isActive
+                      ? 'text-[#B71925] font-bold'
+                      : 'text-neutral-700 dark:text-neutral-200 hover:text-[#B71925] dark:hover:text-[#B71925]'
+                  }`}
+                >
+                  {isVideoCat && <Video className="w-3.5 h-3.5 text-red-600 inline" />}
+                  <span>{label}</span>
+                  {isActive && (
+                    <span className="absolute bottom-[-6px] left-0 right-0 h-[3px] bg-[#B71925]" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Quick Trending Topics on Desktop */}
+          <div className="hidden xl:flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400 font-devanagari">
+            <Flame className="w-3.5 h-3.5 text-[#B71925] shrink-0" />
+            <span className="font-semibold text-neutral-700 dark:text-neutral-300 shrink-0">
+              {isHindi ? 'चर्चा में:' : 'Trending:'}
+            </span>
+            <div className="flex items-center gap-1.5 overflow-hidden">
+              {trendingTags.slice(0, 4).map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => onSelectTag(tag)}
+                  className="hover:text-[#B71925] hover:underline transition-colors shrink-0 text-neutral-600 dark:text-neutral-400 cursor-pointer"
+                >
+                  #{tag}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Drawer Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800 px-4 pt-2 pb-4 shadow-lg animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="grid grid-cols-2 gap-2 py-2">
+            {CATEGORIES.map((cat) => {
+              const isActive = !isCustomView && activeCategory === cat.id;
+              const label = isHindi ? cat.nameHindi : cat.nameEnglish;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => handleCategoryClick(cat.id)}
+                  className={`text-left px-3 py-2 text-sm font-semibold rounded font-devanagari cursor-pointer flex items-center justify-between ${
+                    isActive
+                      ? 'bg-red-50 dark:bg-red-950/40 text-[#B71925] font-bold'
+                      : 'text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                  }`}
+                >
+                  <span>{label}</span>
+                  {isActive && <span className="w-1.5 h-1.5 rounded-full bg-[#B71925]" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </nav>
+  );
+};
