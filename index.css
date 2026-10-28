@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --brand-red: #B71925;
+    --brand-dark: #111827;
+    --brand-gray: #4B5563;
+    --brand-border: #E5E7EB;
+  }
+  
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    font-family: 'Noto Sans Devanagari', system-ui, -apple-system, sans-serif;
+    color: #111827;
+    background-color: #FFFFFF;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  html.dark body {
+    background-color: #0f0f10;
+    color: #f3f4f6;
+  }
+
+  .font-martel {
+    font-family: 'Martel', serif;
+  }
+  
+  .font-devanagari {
+    font-family: 'Noto Sans Devanagari', sans-serif;
+  }
+}
+
+/* Custom editorial styles */
+.editorial-lead-dropcap::first-letter {
+  float: left;
+  font-family: 'Martel', serif;
+  font-size: 3.8rem;
+  line-height: 0.85;
+  padding-top: 4px;
+  padding-right: 10px;
+  padding-bottom: 2px;
+  color: #B71925;
+  font-weight: 800;
+}
+
+/* Custom scrollbar for horizontal categories */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
